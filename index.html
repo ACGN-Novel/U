@@ -123,7 +123,7 @@ button:disabled{opacity:.5;cursor:wait}
       </div>
       <aside id="kpanel">
         <div><div class="kgroup">视图模式</div>
-          <div class="modebtns"><button data-mode="page">📄 单页</button><button data-mode="scroll">↕ 滚动</button></div>
+          <div class="modebtns"><button data-mode="page">📄 单页</button><button data-mode="dual">📖 双页</button><button data-mode="scroll">↕ 滚动</button></div>
         </div>
         <div><div class="kgroup">主题</div>
           <div class="sw" id="kthemes"></div>
@@ -269,15 +269,18 @@ function buildThemes(){
   box.querySelectorAll("span").forEach((el, i) => el.addEventListener("click", () => { cfg.theme = i; applyCfg(); }));
 }
 
+let step = 0;
 function relayout(){
   if(!cur || !fullText) return;
-  if(mode === "page"){
+  if(mode !== "scroll"){
     const w = vp.clientWidth - 24;
-    content.style.columnWidth = w + "px";
+    const colW = (mode === "dual") ? (w - GAP) / 2 : w;
+    step = colW + GAP;
+    content.style.columnWidth = colW + "px";
     const total = content.scrollWidth;
-    pageCount = Math.max(1, Math.round((total + GAP) / (w + GAP)));
+    pageCount = Math.max(1, Math.round((total + GAP) / step));
     if(pageIndex >= pageCount) pageIndex = pageCount - 1;
-    content.style.transform = "translateX(" + (-pageIndex * (w + GAP)) + "px)";
+    content.style.transform = "translateX(" + (-pageIndex * step) + "px)";
     kbar.max = pageCount - 1;
     kpage.textContent = "第 " + (pageIndex + 1) + " / " + pageCount + " 页";
   }else{
@@ -373,9 +376,9 @@ function gotoOffset(off){
     vp.scrollTop += rect.top - vRect.top - 60;
   }else{
     const vRect = vp.getBoundingClientRect();
-    const rel = rect.left - vRect.left - vp.scrollLeft;
-    const w = vp.clientWidth - 24;
-    pageIndex = Math.min(pageCount - 1, Math.max(0, Math.round((vp._tx + rel) / (w + GAP))));
+    const rel = rect.left - vRect.left;
+    const absX = pageIndex * step + rel;
+    pageIndex = Math.min(pageCount - 1, Math.max(0, Math.round(absX / step)));
     relayout();
   }
 }
