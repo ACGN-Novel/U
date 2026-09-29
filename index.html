@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ACGN-Novel 搜书</title>
 <style>
-:root{--accent:#4f46e5;--bg:#f8fafc;--card:#ffffff;--line:#e2e8f0;--txt:#0f172a;--muted:#64748b;}
+:root{--accent:#4f46e5;--bg:#f8fafc;--card:#fff;--line:#e2e8f0;--txt:#0f172a;--muted:#64748b}
 *{box-sizing:border-box}
 body{margin:0;font-family:system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--txt)}
 header{position:sticky;top:0;z-index:10;background:rgba(248,250,252,.95);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:14px 16px 10px}
@@ -31,15 +31,59 @@ button:hover,.abtn:hover{border-color:var(--accent);color:var(--accent)}
 button:disabled{opacity:.5;cursor:wait}
 #more{display:block;margin:16px auto;padding:9px 26px;font-size:14px}
 .empty{text-align:center;color:var(--muted);padding:60px 0}
-/* 阅读弹层 */
-#modal{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;z-index:50}
-#modal.on{display:flex}
-.panel{background:var(--card);width:min(920px,96vw);height:92vh;margin:auto;border-radius:14px;display:flex;flex-direction:column;overflow:hidden}
-.phead{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line)}
-.ptitle{flex:1;font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.reader{flex:1;overflow:auto;padding:20px 26px;font-size:16px;line-height:1.9;white-space:pre-wrap;word-break:break-word;font-family:"Microsoft YaHei",system-ui,serif}
-.pfoot{display:flex;gap:8px;align-items:center;padding:8px 16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
 .spin{color:var(--muted);text-align:center;padding:60px 0}
+/* ===== Koodo 风格阅读器 ===== */
+#modal{position:fixed;inset:0;background:#000;display:none;z-index:50}
+#modal.on{display:block}
+.kwrap{display:flex;flex-direction:column;height:100%;background:var(--r-bg,#fff);color:var(--r-fg,#333);transition:background .25s,color .25s}
+.khead{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid rgba(128,128,128,.25);flex-shrink:0;font-size:13px}
+.khead .ktitle{flex:1;font-weight:700;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kstat{color:var(--r-muted,#888);font-size:12px;white-space:nowrap}
+.kbtn{border:1px solid rgba(128,128,128,.35);background:transparent;color:inherit;border-radius:8px;padding:5px 10px;font-size:12.5px;cursor:pointer}
+.kbtn:hover{border-color:var(--accent);color:var(--accent)}
+.kbody{flex:1;display:flex;min-height:0}
+/* 左侧栏 */
+#kside{width:250px;flex-shrink:0;border-right:1px solid rgba(128,128,128,.25);display:flex;flex-direction:column;min-height:0}
+#kside.hide{display:none}
+.kinfo{padding:12px 14px;border-bottom:1px solid rgba(128,128,128,.2);font-size:12.5px;color:var(--r-muted,#888)}
+.kinfo b{display:block;color:inherit;font-size:13.5px;margin-bottom:4px;word-break:break-all}
+.ksearch{padding:10px 12px;border-bottom:1px solid rgba(128,128,128,.2)}
+#kq{width:100%;padding:7px 10px;font-size:13px;border:1px solid rgba(128,128,128,.35);border-radius:8px;background:transparent;color:inherit;outline:none}
+#kq:focus{border-color:var(--accent)}
+#kresults{flex:1;overflow:auto;padding:6px 0}
+.kres{padding:8px 14px;font-size:12.5px;cursor:pointer;line-height:1.5;border-bottom:1px dashed rgba(128,128,128,.15)}
+.kres:hover{background:rgba(128,128,128,.12)}
+.kres em{color:var(--accent);font-style:normal;font-weight:700}
+/* 中间阅读区 */
+#kcenter{flex:1;min-width:0;position:relative}
+#kviewport{position:absolute;inset:0;overflow:auto;padding:0 24px}
+#kcontent{max-width:var(--r-width,860px);margin:0 auto;padding:28px 8px 80px;font-size:var(--r-fs,17px);line-height:var(--r-lh,1.9);letter-spacing:var(--r-ls,0px);white-space:pre-wrap;word-break:break-word}
+#kcontent p{margin:0 0 var(--r-pg,0.6em)}
+/* 翻页模式 */
+#kviewport.page{overflow:hidden;padding:0 12px}
+#kviewport.page #kcontent{max-width:none;margin:0;padding:0;height:calc(100% - 20px);column-gap:56px;column-fill:auto;white-space:pre-wrap}
+.knav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:64px;border:1px solid rgba(128,128,128,.35);background:rgba(128,128,128,.08);color:inherit;border-radius:10px;font-size:18px;cursor:pointer;opacity:.45;z-index:5}
+.knav:hover{opacity:1;border-color:var(--accent);color:var(--accent)}
+#kprev{left:10px}#knext{right:10px}
+/* 右侧设置面板 */
+#kpanel{width:280px;flex-shrink:0;border-left:1px solid rgba(128,128,128,.25);padding:14px 16px;overflow:auto;font-size:13px;display:flex;flex-direction:column;gap:16px}
+#kpanel.hide{display:none}
+.kgroup{color:var(--r-muted,#888);font-weight:600;margin-bottom:6px}
+.sw{display:flex;flex-wrap:wrap;gap:8px}
+.sw span{width:30px;height:30px;border-radius:50%;border:2px solid rgba(128,128,128,.3);cursor:pointer}
+.sw span.on{border-color:var(--accent);box-shadow:0 0 0 2px rgba(79,70,229,.25)}
+.modebtns{display:flex;gap:8px}
+.modebtns button{flex:1;border:1px solid rgba(128,128,128,.35);background:transparent;color:inherit;border-radius:8px;padding:7px 0;cursor:pointer;font-size:12.5px}
+.modebtns button.on{border-color:var(--accent);color:var(--accent);background:rgba(79,70,229,.08)}
+.krow{margin-bottom:12px}
+.krow label{display:flex;justify-content:space-between;color:var(--r-muted,#888);font-size:12px;margin-bottom:4px}
+.krow input[type=range]{width:100%;accent-color:var(--accent)}
+.kfoot{display:flex;align-items:center;gap:12px;padding:8px 18px;border-top:1px solid rgba(128,128,128,.25);flex-shrink:0;font-size:12.5px}
+.kfoot .karrow{width:34px;height:30px;border:1px solid rgba(128,128,128,.35);background:transparent;color:inherit;border-radius:8px;cursor:pointer;font-size:14px}
+.kfoot .karrow:hover{border-color:var(--accent);color:var(--accent)}
+#kbar{flex:1;accent-color:var(--accent)}
+#kpage{color:var(--r-muted,#888);min-width:110px;text-align:center}
+@media(max-width:900px){#kside{position:absolute;left:0;top:0;bottom:0;z-index:8;background:var(--r-bg,#fff)}#kpanel{position:absolute;right:0;top:0;bottom:0;z-index:8;background:var(--r-bg,#fff)}}
 </style>
 </head>
 <body>
@@ -55,18 +99,46 @@ button:disabled{opacity:.5;cursor:wait}
 </header>
 <main><div id="list"><div class="spin">目录加载中…</div></div><button id="more" hidden>显示更多</button></main>
 
+<!-- Koodo 风格阅读器 -->
 <div id="modal">
-  <div class="panel">
-    <div class="phead">
-      <div class="ptitle" id="mtitle"></div>
-      <button id="fs-">A－</button><button id="fs+">A＋</button>
-      <button id="mclose">关闭 ✕</button>
+  <div class="kwrap">
+    <div class="khead">
+      <button class="kbtn" id="kback">← 返回书库</button>
+      <div class="ktitle" id="mtitle"></div>
+      <span class="kstat" id="ktime"></span>
+      <a class="kbtn" id="mdl1" target="_blank">⬇ 直链下载</a>
+      <a class="kbtn" id="mdl2" target="_blank">⚡ 加速下载</a>
+      <button class="kbtn" id="ksidetoggle">☰ 目录</button>
+      <button class="kbtn" id="kpaneltoggle">⚙ 设置</button>
     </div>
-    <div class="reader" id="reader"></div>
-    <div class="pfoot">
-      <a class="abtn" id="mdl1" target="_blank">⬇ 直链下载</a>
-      <a class="abtn" id="mdl2" target="_blank">⚡ 加速下载</a>
-      <span id="mstat"></span>
+    <div class="kbody">
+      <aside id="kside">
+        <div class="kinfo"><b id="kinfotitle"></b><span id="kinfoMeta"></span></div>
+        <div class="ksearch"><input id="kq" placeholder="全书搜索…"></div>
+        <div id="kresults"></div>
+      </aside>
+      <div id="kcenter">
+        <button class="knav" id="kprev">‹</button><button class="knav" id="knext">›</button>
+        <div id="kviewport"><div id="kcontent"></div></div>
+      </div>
+      <aside id="kpanel">
+        <div><div class="kgroup">视图模式</div>
+          <div class="modebtns"><button data-mode="page">📄 单页</button><button data-mode="scroll">↕ 滚动</button></div>
+        </div>
+        <div><div class="kgroup">主题</div>
+          <div class="sw" id="kthemes"></div>
+        </div>
+        <div class="krow"><label>字体大小 <span id="v-fs"></span></label><input type="range" id="r-fs" min="12" max="42" step="1"></div>
+        <div class="krow"><label>字间距 <span id="v-ls"></span></label><input type="range" id="r-ls" min="0" max="8" step="0.5"></div>
+        <div class="krow"><label>段落间距 <span id="v-pg"></span></label><input type="range" id="r-pg" min="0" max="2.5" step="0.1"></div>
+        <div class="krow"><label>页面宽度 <span id="v-w"></span></label><input type="range" id="r-w" min="600" max="1400" step="50"></div>
+      </aside>
+    </div>
+    <div class="kfoot">
+      <button class="karrow" id="kbarprev">‹</button>
+      <input type="range" id="kbar" min="0" max="1000" value="0">
+      <button class="karrow" id="kbarnext">›</button>
+      <span id="kpage"></span>
     </div>
   </div>
 </div>
@@ -74,31 +146,29 @@ button:disabled{opacity:.5;cursor:wait}
 <script>
 const ORG = "ACGN-Novel";
 const ACCEL = "https://30006000.xyz/";
-let ALL = [], shown = 0, CHUNK = 200, cur = null, fontSize = 16;
+let ALL = [], shown = 0, CHUNK = 200;
 
 const enc = p => p.split("/").map(encodeURIComponent).join("/");
 const rawUrl = it => "https://raw.githubusercontent.com/" + ORG + "/" + it.r + "/main/" + enc(it.p);
 const blobUrl = it => "https://github.com/" + ORG + "/" + it.r + "/blob/main/" + enc(it.p);
 
+/* ---------- 书库列表 ---------- */
 function loadCatalog(){
   return fetch("catalog.json").then(r => r.json()).then(arr => {
     ALL = arr.map(s => {
-      const [r, p, py] = s.split("|");
+      const [r, p] = s.split("|");
       const fn = p.split("/").pop();
-      return {r, p, py, title: fn.replace(/\.txt$/i, "")};
+      return {r, p, title: fn.replace(/\.txt$/i, "")};
     });
     document.getElementById("total").textContent = ALL.length;
   });
 }
-
 function terms(q){ return q.trim().toLowerCase().split(/\s+/).filter(Boolean); }
-
 function match(it, ts){
   if(!ts.length) return true;
   const t = it.title.toLowerCase();
-  return ts.every(x => t.includes(x) || (it.py && it.py.includes(x)));
+  return ts.every(x => t.includes(x));
 }
-
 let lastList = [];
 function render(reset){
   const list = document.getElementById("list");
@@ -123,14 +193,11 @@ function render(reset){
   list.querySelectorAll('[data-act="dl"]').forEach(el =>
     el.addEventListener("click", e => directDownload(ALL[+el.dataset.i], el)));
 }
-
 function doSearch(){
   lastList = ALL.filter(it => match(it, terms(document.getElementById("q").value)));
   render(true);
 }
-
 function esc(s){ return s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
-
 function saveBlob(blob, name){
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -138,7 +205,6 @@ function saveBlob(blob, name){
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 30000);
 }
-
 async function directDownload(it, btn){
   const old = btn ? btn.textContent : "";
   if(btn){ btn.disabled = true; btn.textContent = "下载中…"; }
@@ -146,53 +212,253 @@ async function directDownload(it, btn){
     const r = await fetch(rawUrl(it));
     if(!r.ok) throw new Error(r.status);
     saveBlob(await r.blob(), it.title + ".txt");
-  }catch(e){
-    window.open(ACCEL + blobUrl(it), "_blank");
-  }
+  }catch(e){ window.open(ACCEL + blobUrl(it), "_blank"); }
   if(btn){ btn.disabled = false; btn.textContent = old; }
+}
+
+/* ---------- 阅读器 ---------- */
+const modal = document.getElementById("modal"),
+      vp = document.getElementById("kviewport"),
+      content = document.getElementById("kcontent"),
+      kbar = document.getElementById("kbar"),
+      kpage = document.getElementById("kpage");
+let cur = null, paras = [], offsets = [], fullText = "";
+let mode = "page", pageIndex = 0, pageCount = 1, sessionStart = 0, sessionTimer = null;
+const GAP = 56;
+
+const THEMES = [
+  {n:"白天", bg:"#ffffff", fg:"#333333", muted:"#999999"},
+  {n:"羊皮", bg:"#f4e8c1", fg:"#5b4636", muted:"#8a7a5c"},
+  {n:"护眼", bg:"#cce8cf", fg:"#2e4e3f", muted:"#5f7d6c"},
+  {n:"黑夜", bg:"#121212", fg:"#b8b8b8", muted:"#777777"},
+];
+let cfg = Object.assign({fs:17, ls:0, pg:0.6, w:860, theme:0, mode:"page"},
+  JSON.parse(localStorage.getItem("koodo-cfg") || "{}"));
+function saveCfg(){ localStorage.setItem("koodo-cfg", JSON.stringify(cfg)); }
+
+function applyCfg(){
+  const t = THEMES[cfg.theme];
+  const root = document.querySelector(".kwrap");
+  root.style.setProperty("--r-bg", t.bg);
+  root.style.setProperty("--r-fg", t.fg);
+  root.style.setProperty("--r-muted", t.muted);
+  content.style.setProperty("--r-fs", cfg.fs + "px");
+  content.style.setProperty("--r-ls", cfg.ls + "px");
+  content.style.setProperty("--r-pg", cfg.pg + "em");
+  content.style.setProperty("--r-width", cfg.w + "px");
+  document.getElementById("v-fs").textContent = cfg.fs;
+  document.getElementById("v-ls").textContent = cfg.ls;
+  document.getElementById("v-pg").textContent = cfg.pg;
+  document.getElementById("v-w").textContent = cfg.w;
+  document.getElementById("r-fs").value = cfg.fs;
+  document.getElementById("r-ls").value = cfg.ls;
+  document.getElementById("r-pg").value = cfg.pg;
+  document.getElementById("r-w").value = cfg.w;
+  document.querySelectorAll("#kthemes span").forEach((el, i) => el.classList.toggle("on", i === cfg.theme));
+  document.querySelectorAll(".modebtns button").forEach(b => b.classList.toggle("on", b.dataset.mode === cfg.mode));
+  mode = cfg.mode;
+  vp.classList.toggle("page", mode === "page");
+  saveCfg();
+  requestAnimationFrame(relayout);
+}
+
+function buildThemes(){
+  const box = document.getElementById("kthemes");
+  box.innerHTML = THEMES.map((t, i) =>
+    '<span title="' + t.n + '" style="background:' + t.bg + ';color:' + t.fg + '"></span>').join("");
+  box.querySelectorAll("span").forEach((el, i) => el.addEventListener("click", () => { cfg.theme = i; applyCfg(); }));
+}
+
+function relayout(){
+  if(!cur || !fullText) return;
+  if(mode === "page"){
+    const w = vp.clientWidth - 24;
+    content.style.columnWidth = w + "px";
+    const total = content.scrollWidth;
+    pageCount = Math.max(1, Math.round((total + GAP) / (w + GAP)));
+    if(pageIndex >= pageCount) pageIndex = pageCount - 1;
+    content.style.transform = "translateX(" + (-pageIndex * (w + GAP)) + "px)";
+    kbar.max = pageCount - 1;
+    kpage.textContent = "第 " + (pageIndex + 1) + " / " + pageCount + " 页";
+  }else{
+    content.style.transform = "none";
+    content.style.columnWidth = "auto";
+    kbar.max = 1000;
+    kpage.textContent = Math.round(vp.scrollTop / Math.max(1, vp.scrollHeight - vp.clientHeight) * 100) + "%";
+  }
+}
+
+function fmtDur(min){
+  min = Math.max(1, Math.round(min));
+  return min >= 60 ? Math.floor(min / 60) + " 小时 " + (min % 60) + " 分" : min + " 分钟";
 }
 
 async function openReader(it){
   cur = it;
-  const m = document.getElementById("modal");
-  m.classList.add("on");
+  modal.classList.add("on");
   document.getElementById("mtitle").textContent = it.title;
-  document.getElementById("reader").textContent = "";
-  document.getElementById("mstat").textContent = "加载中…";
-  const rd = document.getElementById("mdl1"); rd.href = blobUrl(it);
+  document.getElementById("kinfotitle").textContent = it.title;
+  document.getElementById("kinfoMeta").textContent = it.r + " · " + it.p;
+  document.getElementById("mdl1").href = blobUrl(it);
   document.getElementById("mdl2").href = ACCEL + blobUrl(it);
+  content.textContent = "";
+  document.getElementById("kresults").innerHTML = "";
+  document.getElementById("kq").value = "";
+  fullText = ""; paras = []; offsets = []; pageIndex = 0;
+  sessionStart = Date.now();
+  if(sessionTimer) clearInterval(sessionTimer);
+  sessionTimer = setInterval(() => {
+    if(!cur || !fullText) return;
+    const mins = (Date.now() - sessionStart) / 60000;
+    document.getElementById("ktime").textContent =
+      "本次 " + Math.floor(mins) + " 分钟 · 读完本书约 " + fmtDur(fullText.length / 450);
+  }, 1000);
+  document.getElementById("kside").classList.add("hide");
+  document.getElementById("kpanel").classList.add("hide");
+  applyCfg();
   try{
     const resp = await fetch(rawUrl(it));
     if(!resp.ok) throw new Error("HTTP " + resp.status);
     const reader = resp.body.getReader();
     const dec = new TextDecoder("utf-8");
-    let chunks = [], bytes = 0, node = document.getElementById("reader");
+    let chunks = [], bytes = 0;
+    const stat = document.getElementById("kinfoMeta");
+    const meta0 = it.r + " · " + it.p;
     for(;;){
       const {done, value} = await reader.read();
       if(done) break;
       chunks.push(dec.decode(value, {stream:true}));
       bytes += value.length;
-      document.getElementById("mstat").textContent = (bytes/1048576).toFixed(1) + " MB";
-      node.textContent = chunks.join("");
-      if(node.scrollHeight - node.scrollTop < node.clientHeight + 400) node.scrollTop = node.scrollHeight;
+      stat.textContent = meta0 + " · " + (bytes / 1048576).toFixed(1) + " MB";
     }
-    node.textContent = chunks.join("");
-    document.getElementById("mstat").textContent = "共 " + (bytes/1048576).toFixed(1) + " MB · 完整载入";
+    fullText = chunks.join("");
+    renderText(fullText);
+    document.getElementById("kinfoMeta").textContent = meta0 + " · " + (bytes / 1048576).toFixed(1) + " MB · " + fullText.length.toLocaleString() + " 字";
+    relayout();
   }catch(e){
-    document.getElementById("reader").textContent = "加载失败：" + e.message + "\n\n可改用底部「直链下载 / 加速下载」。";
-    document.getElementById("mstat").textContent = "";
+    content.textContent = "加载失败：" + e.message + "\n\n可改用顶部「直链下载 / 加速下载」。";
   }
 }
 
+function renderText(text){
+  const lines = text.split("\n");
+  paras = lines; offsets = new Array(lines.length);
+  let acc = 0;
+  const frag = document.createDocumentFragment();
+  for(let i = 0; i < lines.length; i++){
+    offsets[i] = acc; acc += lines[i].length + 1;
+    const p = document.createElement("p");
+    p.textContent = lines[i] === "" ? "\u00a0" : lines[i];
+    p.dataset.pi = i;
+    frag.appendChild(p);
+  }
+  content.textContent = "";
+  content.appendChild(frag);
+}
+
+function gotoOffset(off){
+  let lo = 0, hi = offsets.length - 1, pi = 0;
+  while(lo <= hi){
+    const mid = (lo + hi) >> 1;
+    if(offsets[mid] <= off){ pi = mid; lo = mid + 1; } else hi = mid - 1;
+  }
+  const p = content.querySelector('p[data-pi="' + pi + '"]');
+  if(!p || !p.firstChild) return;
+  const range = document.createRange();
+  range.setStart(p.firstChild, Math.min(off - offsets[pi], p.textContent.length));
+  range.collapse(true);
+  const rect = range.getBoundingClientRect();
+  if(mode === "scroll"){
+    const vRect = vp.getBoundingClientRect();
+    vp.scrollTop += rect.top - vRect.top - 60;
+  }else{
+    const vRect = vp.getBoundingClientRect();
+    const rel = rect.left - vRect.left - vp.scrollLeft;
+    const w = vp.clientWidth - 24;
+    pageIndex = Math.min(pageCount - 1, Math.max(0, Math.round((vp._tx + rel) / (w + GAP))));
+    relayout();
+  }
+}
+
+/* 全书搜索 */
+let searchTimer = null;
+document.getElementById("kq").addEventListener("input", e => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => runInBookSearch(e.target.value.trim()), 300);
+});
+function runInBookSearch(qs){
+  const box = document.getElementById("kresults");
+  box.innerHTML = "";
+  if(!qs || !fullText) return;
+  const q = qs.toLowerCase(), lower = fullText.toLowerCase();
+  let pos = 0, n = 0, html = "";
+  while(n < 200){
+    const idx = lower.indexOf(q, pos);
+    if(idx < 0) break;
+    const s = Math.max(0, idx - 24);
+    const snippet = fullText.slice(s, idx + q.length + 30).replace(/\s+/g, " ");
+    html += '<div class="kres" data-off="' + idx + '">' + esc(snippet.slice(0, 24)) + "<em>" +
+            esc(snippet.slice(24, 24 + q.length)) + "</em>" + esc(snippet.slice(24 + q.length)) + "</div>";
+    pos = idx + q.length; n++;
+  }
+  box.innerHTML = html || '<div class="kres">无结果</div>';
+  box.querySelectorAll(".kres[data-off]").forEach(el =>
+    el.addEventListener("click", () => gotoOffset(+el.dataset.off)));
+}
+
+/* 翻页 / 进度 */
+function nav(d){
+  if(mode === "page"){
+    pageIndex = Math.min(pageCount - 1, Math.max(0, pageIndex + d));
+    relayout();
+  }else{
+    vp.scrollBy({top: d * vp.clientHeight * 0.9, behavior: "smooth"});
+  }
+}
+document.getElementById("kprev").addEventListener("click", () => nav(-1));
+document.getElementById("knext").addEventListener("click", () => nav(1));
+document.getElementById("kbarprev").addEventListener("click", () => nav(-1));
+document.getElementById("kbarnext").addEventListener("click", () => nav(1));
+kbar.addEventListener("input", () => {
+  if(mode === "page"){ pageIndex = +kbar.value; relayout(); }
+  else vp.scrollTop = (vp.scrollHeight - vp.clientHeight) * (+kbar.value / 1000);
+});
+vp.addEventListener("scroll", () => {
+  if(mode !== "scroll") return;
+  kbar.value = Math.round(vp.scrollTop / Math.max(1, vp.scrollHeight - vp.clientHeight) * 1000);
+  kpage.textContent = Math.round(kbar.value / 10) + "%";
+});
+window.addEventListener("resize", () => { if(modal.classList.contains("on")) relayout(); });
+document.addEventListener("keydown", e => {
+  if(!modal.classList.contains("on")) return;
+  if(e.key === "Escape") closeReader();
+  else if(e.key === "ArrowLeft") nav(-1);
+  else if(e.key === "ArrowRight") nav(1);
+});
+function closeReader(){
+  modal.classList.remove("on");
+  if(sessionTimer){ clearInterval(sessionTimer); sessionTimer = null; }
+  cur = null; fullText = "";
+}
+document.getElementById("kback").addEventListener("click", closeReader);
+modal.addEventListener("click", e => { if(e.target === modal) closeReader(); });
+
+/* 面板开关与设置控件 */
+document.getElementById("ksidetoggle").addEventListener("click", () =>
+  document.getElementById("kside").classList.toggle("hide"));
+document.getElementById("kpaneltoggle").addEventListener("click", () =>
+  document.getElementById("kpanel").classList.toggle("hide"));
+document.querySelectorAll(".modebtns button").forEach(b =>
+  b.addEventListener("click", () => { cfg.mode = b.dataset.mode; pageIndex = 0; applyCfg(); }));
+document.getElementById("r-fs").addEventListener("input", e => { cfg.fs = +e.target.value; applyCfg(); });
+document.getElementById("r-ls").addEventListener("input", e => { cfg.ls = +e.target.value; applyCfg(); });
+document.getElementById("r-pg").addEventListener("input", e => { cfg.pg = +e.target.value; applyCfg(); });
+document.getElementById("r-w").addEventListener("input", e => { cfg.w = +e.target.value; applyCfg(); });
+buildThemes();
+
+/* ---------- 启动 ---------- */
 document.getElementById("q").addEventListener("input", doSearch);
 document.getElementById("more").addEventListener("click", () => render(false));
-document.getElementById("mclose").addEventListener("click", () => document.getElementById("modal").classList.remove("on"));
-document.getElementById("modal").addEventListener("click", e => { if(e.target.id === "modal") e.target.classList.remove("on"); });
-document.getElementById("fs+").addEventListener("click", () => { fontSize = Math.min(28, fontSize + 2); applyFs(); });
-document.getElementById("fs-").addEventListener("click", () => { fontSize = Math.max(12, fontSize - 2); applyFs(); });
-function applyFs(){ document.getElementById("reader").style.fontSize = fontSize + "px"; }
-document.addEventListener("keydown", e => { if(e.key === "Escape") document.getElementById("modal").classList.remove("on"); });
-
 loadCatalog().then(doSearch);
 </script>
 </body>
