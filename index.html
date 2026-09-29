@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ACGN-Novel 搜书</title>
+<style>
+:root{--accent:#4f46e5;--bg:#f8fafc;--card:#ffffff;--line:#e2e8f0;--txt:#0f172a;--muted:#64748b;}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--txt)}
+header{position:sticky;top:0;z-index:10;background:rgba(248,250,252,.95);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:14px 16px 10px}
+.wrap{max-width:960px;margin:0 auto}
+h1{margin:0;font-size:20px}
+.sub{color:var(--muted);font-size:13px;margin-top:2px}
+.sub a{color:var(--accent);text-decoration:none}
+.searchbar{display:flex;gap:10px;align-items:center;margin-top:10px}
+#q{flex:1;padding:10px 14px;font-size:15px;border:1.5px solid var(--line);border-radius:10px;outline:none;background:#fff}
+#q:focus{border-color:var(--accent)}
+#count{font-size:13px;color:var(--muted);white-space:nowrap}
+main{max-width:960px;margin:14px auto 60px;padding:0 16px}
+.item{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:8px}
+.item:hover{border-color:#c7d2fe}
+.meta{flex:1;min-width:0}
+.title{font-size:15px;font-weight:600;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.title:hover{color:var(--accent)}
+.path{font-size:12px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{display:inline-block;background:#eef2ff;color:var(--accent);font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;margin-right:6px}
+.btns{display:flex;gap:6px;flex-shrink:0}
+button,.abtn{border:1px solid var(--line);background:#fff;color:var(--txt);border-radius:8px;padding:6px 10px;font-size:12.5px;cursor:pointer;text-decoration:none;white-space:nowrap}
+button:hover,.abtn:hover{border-color:var(--accent);color:var(--accent)}
+button:disabled{opacity:.5;cursor:wait}
+#more{display:block;margin:16px auto;padding:9px 26px;font-size:14px}
+.empty{text-align:center;color:var(--muted);padding:60px 0}
+/* 阅读弹层 */
+#modal{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;z-index:50}
+#modal.on{display:flex}
+.panel{background:var(--card);width:min(920px,96vw);height:92vh;margin:auto;border-radius:14px;display:flex;flex-direction:column;overflow:hidden}
+.phead{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line)}
+.ptitle{flex:1;font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.reader{flex:1;overflow:auto;padding:20px 26px;font-size:16px;line-height:1.9;white-space:pre-wrap;word-break:break-word;font-family:"Microsoft YaHei",system-ui,serif}
+.pfoot{display:flex;gap:8px;align-items:center;padding:8px 16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.spin{color:var(--muted);text-align:center;padding:60px 0}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>📚 ACGN-Novel 搜书</h1>
+    <div class="sub">收录 transchinese 三站（novel / xnovel / unovel）翻译小说 TXT，共 <b id="total">…</b> 本 · <a href="https://github.com/ACGN-Novel" target="_blank">GitHub 组织</a></div>
+    <div class="searchbar">
+      <input id="q" placeholder="搜索书名任意字；也支持拼音首字母，如 zs → 重生…" autofocus>
+      <span id="count"></span>
+    </div>
+  </div>
+</header>
+<main><div id="list"><div class="spin">目录加载中…</div></div><button id="more" hidden>显示更多</button></main>
+
+<div id="modal">
+  <div class="panel">
+    <div class="phead">
+      <div class="ptitle" id="mtitle"></div>
+      <button id="fs-">A－</button><button id="fs+">A＋</button>
+      <button id="mclose">关闭 ✕</button>
+    </div>
+    <div class="reader" id="reader"></div>
+    <div class="pfoot">
+      <a class="abtn" id="mdl1" target="_blank">⬇ 直链下载</a>
+      <a class="abtn" id="mdl2" target="_blank">⚡ 加速下载</a>
+      <span id="mstat"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+const ORG = "ACGN-Novel";
+const ACCEL = "https://30006000.xyz/";
+let ALL = [], shown = 0, CHUNK = 200, cur = null, fontSize = 16;
+
+const enc = p => p.split("/").map(encodeURIComponent).join("/");
+const rawUrl = it => "https://raw.githubusercontent.com/" + ORG + "/" + it.r + "/main/" + enc(it.p);
+const blobUrl = it => "https://github.com/" + ORG + "/" + it.r + "/blob/main/" + enc(it.p);
+
+function loadCatalog(){
+  return fetch("catalog.json").then(r => r.json()).then(arr => {
+    ALL = arr.map(s => {
+      const [r, p, py] = s.split("|");
+      const fn = p.split("/").pop();
+      return {r, p, py, title: fn.replace(/\.txt$/i, "")};
+    });
+    document.getElementById("total").textContent = ALL.length;
+  });
+}
+
+function terms(q){ return q.trim().toLowerCase().split(/\s+/).filter(Boolean); }
+
+function match(it, ts){
+  if(!ts.length) return true;
+  const t = it.title.toLowerCase();
+  return ts.every(x => t.includes(x) || (it.py && it.py.includes(x)));
+}
+
+let lastList = [];
+function render(reset){
+  const list = document.getElementById("list");
+  if(reset){ shown = 0; list.innerHTML = ""; }
+  const slice = lastList.slice(shown, shown + CHUNK);
+  const html = slice.map(it =>
+    '<div class="item">' +
+    '<div class="meta"><div class="title" data-i="' + ALL.indexOf(it) + '">' + esc(it.title) + '</div>' +
+    '<div class="path"><span class="badge">' + it.r + '</span>' + esc(it.p) + '</div></div>' +
+    '<div class="btns">' +
+    '<button data-act="read" data-i="' + ALL.indexOf(it) + '">📖 阅读</button>' +
+    '<button data-act="dl" data-i="' + ALL.indexOf(it) + '">⬇ 直链</button>' +
+    '<a class="abtn" target="_blank" href="' + ACCEL + blobUrl(it) + '">⚡ 加速</a>' +
+    '</div></div>').join("");
+  if(reset && !html) list.innerHTML = '<div class="empty">没有找到匹配的书</div>';
+  else list.insertAdjacentHTML("beforeend", html);
+  shown += slice.length;
+  document.getElementById("more").hidden = shown >= lastList.length;
+  document.getElementById("count").textContent = lastList.length ? lastList.length + " 本" : "";
+  list.querySelectorAll('[data-act="read"],.title[data-i]').forEach(el =>
+    el.addEventListener("click", () => openReader(ALL[+el.dataset.i])));
+  list.querySelectorAll('[data-act="dl"]').forEach(el =>
+    el.addEventListener("click", e => directDownload(ALL[+el.dataset.i], el)));
+}
+
+function doSearch(){
+  lastList = ALL.filter(it => match(it, terms(document.getElementById("q").value)));
+  render(true);
+}
+
+function esc(s){ return s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function saveBlob(blob, name){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+}
+
+async function directDownload(it, btn){
+  const old = btn ? btn.textContent : "";
+  if(btn){ btn.disabled = true; btn.textContent = "下载中…"; }
+  try{
+    const r = await fetch(rawUrl(it));
+    if(!r.ok) throw new Error(r.status);
+    saveBlob(await r.blob(), it.title + ".txt");
+  }catch(e){
+    window.open(ACCEL + blobUrl(it), "_blank");
+  }
+  if(btn){ btn.disabled = false; btn.textContent = old; }
+}
+
+async function openReader(it){
+  cur = it;
+  const m = document.getElementById("modal");
+  m.classList.add("on");
+  document.getElementById("mtitle").textContent = it.title;
+  document.getElementById("reader").textContent = "";
+  document.getElementById("mstat").textContent = "加载中…";
+  const rd = document.getElementById("mdl1"); rd.href = blobUrl(it);
+  document.getElementById("mdl2").href = ACCEL + blobUrl(it);
+  try{
+    const resp = await fetch(rawUrl(it));
+    if(!resp.ok) throw new Error("HTTP " + resp.status);
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder("utf-8");
+    let chunks = [], bytes = 0, node = document.getElementById("reader");
+    for(;;){
+      const {done, value} = await reader.read();
+      if(done) break;
+      chunks.push(dec.decode(value, {stream:true}));
+      bytes += value.length;
+      document.getElementById("mstat").textContent = (bytes/1048576).toFixed(1) + " MB";
+      node.textContent = chunks.join("");
+      if(node.scrollHeight - node.scrollTop < node.clientHeight + 400) node.scrollTop = node.scrollHeight;
+    }
+    node.textContent = chunks.join("");
+    document.getElementById("mstat").textContent = "共 " + (bytes/1048576).toFixed(1) + " MB · 完整载入";
+  }catch(e){
+    document.getElementById("reader").textContent = "加载失败：" + e.message + "\n\n可改用底部「直链下载 / 加速下载」。";
+    document.getElementById("mstat").textContent = "";
+  }
+}
+
+document.getElementById("q").addEventListener("input", doSearch);
+document.getElementById("more").addEventListener("click", () => render(false));
+document.getElementById("mclose").addEventListener("click", () => document.getElementById("modal").classList.remove("on"));
+document.getElementById("modal").addEventListener("click", e => { if(e.target.id === "modal") e.target.classList.remove("on"); });
+document.getElementById("fs+").addEventListener("click", () => { fontSize = Math.min(28, fontSize + 2); applyFs(); });
+document.getElementById("fs-").addEventListener("click", () => { fontSize = Math.max(12, fontSize - 2); applyFs(); });
+function applyFs(){ document.getElementById("reader").style.fontSize = fontSize + "px"; }
+document.addEventListener("keydown", e => { if(e.key === "Escape") document.getElementById("modal").classList.remove("on"); });
+
+loadCatalog().then(doSearch);
+</script>
+</body>
+</html>
