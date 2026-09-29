@@ -7,7 +7,7 @@
 
 ## 🔍 在线搜书
 
-**[点击打开搜书页面](https://acgn-novel.github.io/U/)** — 支持书名任意字 / 拼音首字母搜索、在线阅读、一键下载（GitHub 直链或 30006000.xyz 加速）。
+**[点击打开搜书页面（优选加速线路）](https://n.yhxjlb.xyz/)** · [备用线路（GitHub 直连）](https://acgn-novel.github.io/U/) — 支持书名任意字 / 拼音首字母搜索、在线阅读、一键下载（GitHub 直链或 30006000.xyz 加速）。
 
 ## 各仓库书目
 
